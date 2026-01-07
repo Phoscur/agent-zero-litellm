@@ -53,6 +53,7 @@ services:
       - ./knowledge:/a0/knowledge # - Knowledge base
       - ./instruments:/a0/instruments # - Instruments and functions
       - ./prompts:/a0/prompts # - Prompt files
+      - ./docs:/a0/docs # - Documentation files
       - ./a0.env:/a0/.env # - Your API keys
       - ./a0settings.json:/a0/tmp/settings.json # - Your Agent Zero settings
       - ./python:/a0/python # - Python code for the agent

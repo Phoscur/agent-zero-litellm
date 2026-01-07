@@ -1,21 +1,35 @@
 model_list:
+  # free Gemini: https://www.aifreeapi.com/en/posts/gemini-advanced-rate-limit
   - model_name: gemini-brain
     litellm_params:
       # If this fails, fallback to 'gemini-2.5-flash' which is the current stable workhorse
-      model: gemini/gemini-3-flash-preview
+      model: gemini/gemini-3-flash-preview # free rates: probably <5RPM, <50RPD 
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: gemini-brain-pro 
+    litellm_params:
+      # If this fails, fallback to 'gemini-2.5-flash' which is the current stable workhorse
+      model: gemini/gemini-3-pro-preview # free rates: 2RPM, 15RPD
       api_key: os.environ/GEMINI_API_KEY
       
   - model_name: gemini-2.5-flash
     litellm_params:
-      model: gemini/gemini-2.5-flash
+      model: gemini/gemini-2.5-flash # free rates: 2-10RPM, 15-250RPD 
       api_key: os.environ/GEMINI_API_KEY
 
   - model_name: gemini-2.5-flash-lite
     litellm_params:
-      model: gemini/gemini-2.5-flash-lite
+      model: gemini/gemini-2.5-flash-lite # free rates: 30RPM, 1000RPD
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: gemini-2.5-pro
+    litellm_params:
+      model: gemini/gemini-2.5-pro # free rates: 2-5RPM, 25RPD 
       api_key: os.environ/GEMINI_API_KEY
 
   - model_name: gemini-3-flash
+  # Maybe this one needs billing enabled?
+  # > No deployments available for selected model, Try again in 5 seconds. Passed model=gemini-3-flash
     litellm_params:
       model: gemini/gemini-3-flash
       api_key: os.environ/GEMINI_API_KEY
