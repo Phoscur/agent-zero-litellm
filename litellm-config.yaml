@@ -1,0 +1,30 @@
+model_list:
+  - model_name: gemini-brain
+    litellm_params:
+      # If this fails, fallback to 'gemini-2.5-flash' which is the current stable workhorse
+      model: gemini/gemini-3-flash-preview
+      api_key: os.environ/GEMINI_API_KEY
+      
+  - model_name: gemini-2.5-flash
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: gemini-2.5-flash-lite
+    litellm_params:
+      model: gemini/gemini-2.5-flash-lite
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: gemini-3-flash
+    litellm_params:
+      model: gemini/gemini-3-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: gemini-embedding-1.0
+    litellm_params:
+      model: gemini/gemini-embedding-1.0
+      api_key: os.environ/GEMINI_API_KEY
+
+general_settings:
+  # some kind of (pretend) auth, not for gemini, nor openrouter
+  master_key: sk-1234

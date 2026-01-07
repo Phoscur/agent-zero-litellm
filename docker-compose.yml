@@ -1,0 +1,95 @@
+services:
+  # 1. THE TRANSLATOR (LiteLLM) FOR THE BRAIN
+  # Proxies "OpenAI-style" requests to Google's API
+  litellm:
+    #image: ghcr.io/berriai/litellm:main-latest
+    image: ghcr.io/berriai/litellm:main-v1.80.11-nightly
+    container_name: litellm
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    command: [ "--config", "/app/config.yaml", "--port", "4000" ]
+    networks:
+      - agent_net
+
+  # 2. THE LOCAL BODY (Ollama) MEMORY + UTILITY
+  # Runs on RTX 3060 Ti (8GB VRAM) - should use up to 2-3 or 4-5 GB VRAM
+  ollama:
+    image: ollama/ollama:latest
+    # don't forget to hydrate
+    # docker exec -it ollama ollama pull llama3.2:3b
+    # docker exec -it ollama ollama pull llama3.1:8b
+    # docker exec -it ollama ollama pull nomic-embed-text
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - agent_net
+
+  # 3. THE AGENT (Agent Zero)
+  agent-zero:
+    image: agent0ai/agent-zero:latest
+    container_name: agent-zero
+    ports:
+      - "5000:80"
+    volumes:
+      - ./workspace:/app/workspace
+      #- ./a0_settings.json:/app/settings.json
+      # ./a0:/a0
+      - ./agents:/a0/agents # - Specialized agents with their prompts and tools
+      - ./memory:/a0/memory # - Agent's memory and learned information
+      - ./knowledge:/a0/knowledge # - Knowledge base
+      - ./instruments:/a0/instruments # - Instruments and functions
+      - ./prompts:/a0/prompts # - Prompt files
+      - ./a0.env:/a0/.env # - Your API keys
+      - ./a0settings.json:/a0/tmp/settings.json # - Your Agent Zero settings
+      - ./python:/a0/python # - Python code for the agent
+
+    environment:
+      # --- AUTHENTICATION (Internal Proxy) ---
+      # --- THE BRAIN (Google Cloud via Proxy) ---
+      # (Chat) -> LiteLLM Proxy instead of OpenRouter
+      - CHAT_MODEL_PROVIDER=openai
+      - CHAT_MODEL_BASE_URL=http://litellm:4000/v1
+      - OPENAI_API_KEY=sk-1234
+      
+      - CHAT_MODEL=gemini-brain
+      #- CHAT_MODEL=gemini-stable
+      
+      # --- THE ADMIN (Local GPU) ---
+      # Llama 3.2 3B is fast and uses only ~2.2GB VRAM
+      - UTILITY_MODEL=ollama/llama3.2:3b
+      # Alternatively using the verified 8B model for your 3060 Ti
+      # - UTILITY_MODEL=ollama/llama3.1:8b
+      - UTILITY_BASE_URL=http://ollama:11434
+      
+      # --- THE MEMORY (Local GPU) ---
+      # This forces Agent Zero to talk to the sibling container for vectors
+      - EMBEDDING_PROVIDER=ollama
+      - EMBEDDING_MODEL=nomic-embed-text
+      - EMBEDDING_BASE_URL=http://ollama:11434
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      - litellm
+      - ollama
+    networks:
+      - agent_net
+
+volumes:
+  ollama_data:
+
+networks:
+  agent_net:
+    driver: bridge
